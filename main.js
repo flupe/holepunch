@@ -148,6 +148,9 @@ async function processFile() {
 
   data.forEach((x, i) => {
     img[i] = hex(palette[data[i]])
+    let hole = document.createElement('span')
+    if (data[i]) hole.classList.add('punched')
+    punchcard.appendChild(hole)
   })
 
   ctx.putImageData(buf, 0, 0)

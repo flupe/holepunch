@@ -7,12 +7,39 @@
 canvas {
   image-rendering: pixelated
 }
+
+#punchcard {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 10px;
+  margin: 1em;
+  border: 1px solid #000;
+  border-radius: 15px;
+  padding: 40px 30px;
+  box-sizing: border-box;
+}
+
+#punchcard {
+  span {
+    padding: 0;
+    border: 1px solid #000;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+
+    &.punched {
+      background: #000;
+    }
+  }
+}
+
+
     </style>
   </head>
   <body>
     <input type="file" id="filepick" accept=".aseprite">
     <br>
     <canvas id="canvas"></canvas>
+    <div id="punchcard"></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako_inflate.min.js" integrity="sha512-mlnC6JeOvg9V4vBpWMxGKscsCdScB6yvGVCeFF2plnQMRmwH69s9F8SHPbC0oirqfePmRBhqx2s3Bx7WIvHfWg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="main.js"></script>
   </body>
