@@ -1,13 +1,17 @@
 const on = (t, e, f) => t.addEventListener(e, f, false)
 const hex = (c) => 0xff000000 | c.b << 16 | c.g << 8 | c.r
 
-const palette = []
+// file info (to be update when loading)
+let palette = []
+let data    = null
+let pwidth  = 0
+let pheight = 0
+let width   = 0
+let height  = 0
+let ratio   = 1
 
-async function processFile() {
+async function processFile(file) {
   // exit if less/more than 1 file is selected
-  if (filepick.files.length != 1) return
-
-  const file   = filepick.files[0]
   const buffer = await file.arrayBuffer()
   const view   = new DataView(buffer)
 
@@ -37,22 +41,23 @@ async function processFile() {
     throw new Error(`Invalid magic number: ${magic}. Not an aseprite file.`)
 
   const frameCount = u16()
-  const width      = u16()
-  const height     = u16()
+  width  = u16()
+  height = u16()
   const colorDepth = u16()
-
-  const data = new Uint8Array(width * height)
 
   // indexed mode to use palettes
   if (colorDepth != 8)
     throw new Error(`Unsupported color depth: ${colorDepth}. Aseprite file should be in indexed mode.`)
 
+  // allocate some space for the imported image
+  data = new Uint8Array(width * height)
+
   offset += 20
 
-  const pwidth  = u8() || 1
-  const pheight = u8() || 1
+  pwidth  = u8() || 1
+  pheight = u8() || 1
 
-  const ratio = pwidth / pheight
+  ratio = pwidth / pheight
 
   offset = 128 // skip rest of header
 
@@ -65,8 +70,7 @@ async function processFile() {
 
   offset += 6 // reserved space
 
-  if (chunkCount === 0xffff)
-      chunkCount = u32()
+  if (chunkCount === 0xffff) chunkCount = u32()
 
   offset = 144
 
@@ -102,7 +106,7 @@ async function processFile() {
       continue
     }
     else if (chunkType != 0x2005) {
-      console.log("Skipping chunk")
+      console.log(`Skipping chunk: 0x${chunkType.toString(16)}`)
       offset = chunkStart + chunkSize
       continue
     }
@@ -127,34 +131,61 @@ async function processFile() {
       pako.inflate(rawData).forEach((v, i) => {
         let px = x + (i % cwidth)
         let py = y + Math.floor(i / cwidth)
-        console.log(v)
         data[px + py * width] = v % palette.length
-      }) 
+      })
     }
 
     offset = chunkStart + chunkSize
   }
+}
 
-  // draw on canvas
+on(filepick, "change", onFileInputChange)
+
+async function onFileInputChange() {
+  if (filepick.files.length != 1) return
+  await processFile(filepick.files[0])
+  updatePunchCard()
+}
+
+function updatePunchCard() {
+  // show file info
+
+  // update file stats
+  fileinfo.style.display    = 'inherit'
+  fileinfo_dims.innerText   = `${width}x${height}`
+  fileinfo_pal.innerText    = `${palette.length} yarn(s)`
+  fileinfo_ratio.innerText  = `${pwidth}:${pheight}`
+
+  // draw the canvas preview
   canvas.width  = width
   canvas.height = height
-
-  canvas.style.width  = `${3 * width * ratio}px`
-  canvas.style.height = `${3 * height}px`
-
+  canvas.style.aspectRatio = `${width * ratio | 0} / ${height}`
   let ctx = canvas.getContext('2d')
   let buf = ctx.createImageData(width, height)
   let img = new Uint32Array(buf.data.buffer)
+  data.forEach((x, i) => img[i] = hex(palette[data[i]]))
+  ctx.putImageData(buf, 0, 0)
 
-  data.forEach((x, i) => {
-    img[i] = hex(palette[data[i]])
-    let hole = document.createElement('span')
-    if (data[i]) hole.classList.add('punched')
-    punchcard.appendChild(hole)
+  punchcard.innerHTML = ""
+
+  let punch = new Array(width * height * 2).fill(false)
+  let hole  = document.createElement('span')
+  let frag  = document.createDocumentFragment()
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      punch[x + width * (2 * y + (y % 2))    ] = data[x + y * width] == 1
+      punch[x + width * (2 * y + 1 - (y % 2))] = data[x + y * width] != 1
+    }
+  }
+
+  punch.forEach(isPunched => {
+    let newHole = hole.cloneNode()
+    newHole.classList.toggle('punched', isPunched)
+    frag.appendChild(newHole)
   })
 
-  ctx.putImageData(buf, 0, 0)
+  punchcard.appendChild(frag)
 }
 
-on(filepick, "change", processFile)
-processFile()
+onFileInputChange()

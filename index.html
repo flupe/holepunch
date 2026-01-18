@@ -5,6 +5,7 @@
     <title>holepunch</title>
     <style>
 body {
+  font-size: 16px;
   font-family: monospace;
   background: #eee;
   max-width: 1180px;
@@ -16,21 +17,66 @@ body {
   grid-template-columns: 1fr 2fr;
 }
 
-h1 {
-  ruby { ruby-position: under }
-  rt   {}
-}
+p { margin: 0 }
 
 main {
-  text-align: right;
   padding-top: 20px;
   position: sticky;
   top: 0;
   left: 0;
   align-self: start;
 
-  canvas { image-rendering: pixelated }
+  header {
+    text-align: justify;
+
+    h1 {
+      .dotted {
+        display: flex;
+        justify-content: right;
+      }
+      ruby { ruby-position: under }
+      rt   {}
+    }
+
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    image-rendering: pixelated;
+  }
+
+  hr {
+    margin: 1rem 0;
+    opacity: .2;
+    border: none;
+    border-bottom: 3px dotted #000;
+  }
+
+  label { }
+
+  input[type="file"] {
+    margin: 1rem 0;
+    font-family: monospace;
+    display: block;
+    &::file-selector-button {
+      font-family: monospace;
+      border-radius: 0;
+      border-width: 1px;
+      padding: .5rem;
+      margin-right: 1rem;
+      cursor: pointer;
+    }
+  }
+
+  input[type="checkbox"], label {
+    cursor: pointer;
+    user-select: none;
+  }
 }
+
+#fileinfo { display: none }
 
 #punchcard {
   display: grid;
@@ -39,18 +85,34 @@ main {
   background: #fff;
   grid-template-columns: repeat(24, 1fr);
   margin: 1em;
-  border: 2px solid #ccc;
-  border-radius: 15px;
+  border: 2px solid #aaa;
+  border-radius: 8px;
   padding: 40px 30px;
+  gap: 2px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1), 0 2px 2px rgba(0, 0, 0, 0.1);
 
   span {
     padding: 0;
-    border: 1px solid #000;
     aspect-ratio: 1 / 1;
     border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
     &.punched {
       background: #000;
+    }
+
+    &:not(.punched) {
+      border: 1px solid #aaa;
+      &::after {
+        content: '';
+        display: block;
+        background: #aaa;
+        width: 4px;
+        aspect-ratio: 1 / 1;
+        border-radius: 50%;
+      }
     }
   }
 }
@@ -70,27 +132,42 @@ main {
   </head>
   <body>
     <main>
-      <h1>
-        <span class="sr-only">holepunch</span>
-        <span aria-hidden="true">
-          <ruby>⠓<rt>h</rt></ruby>
-          <ruby>⠕<rt>o</rt></ruby>
-          <ruby>⠇<rt>l</rt></ruby>
-          <ruby>⠑<rt>e</rt></ruby>
-          <ruby>⠏<rt>p</rt></ruby>
-          <ruby>⠥<rt>u</rt></ruby>
-          <ruby>⠝<rt>n</rt></ruby>
-          <ruby>⠉<rt>c</rt></ruby>
-          <ruby>⠓<rt>h</rt></ruby>
-        </span>
-      </h1>
-      <p>
-      <em>holepunch</em> is a small utility to generate knitting machine punchcards from designs made using Aseprite.
-      It is especially useful for generating <em>double-jacquard</em> patterns.
-      </p>
+      <header>
+        <h1>
+          <span class="sr-only">holepunch</span>
+          <span class="dotted" aria-hidden="true">
+            <ruby>⠓<rt>h</rt></ruby>
+            <ruby>⠕<rt>o</rt></ruby>
+            <ruby>⠇<rt>l</rt></ruby>
+            <ruby>⠑<rt>e</rt></ruby>
+            <ruby>⠏<rt>p</rt></ruby>
+            <ruby>⠥<rt>u</rt></ruby>
+            <ruby>⠝<rt>n</rt></ruby>
+            <ruby>⠉<rt>c</rt></ruby>
+            <ruby>⠓<rt>h</rt></ruby>
+          </span>
+        </h1>
+        <p>
+        <em>holepunch</em> is a small utility for generating knitting machine punchcards from designs made using <a href="https://www.aseprite.org/">Aseprite</a>.
+        It is especially useful for generating <em>double jacquard</em> patterns.
+        </p>
+      </header>
+      <hr>
+      <label for=filepick>Load an Aseprite file:</label><br>
       <input type="file" id="filepick" accept=".aseprite">
-      <br>
-      <canvas id="canvas"></canvas>
+      <hr>
+      <section id="fileinfo">
+        <p>
+          Dimensions:   <span id="fileinfo_dims"></span><br>
+          Palette size: <span id="fileinfo_pal"></span><br>
+          Pixel ratio:  <span id="fileinfo_ratio"></span>
+        </p>
+        <hr>
+        <input checked id="double_jacquard" type="checkbox">
+        <label for="double_jacquard">double jacquard</label>
+        <hr>
+        <canvas id="canvas"></canvas>
+      </section>
     </main>
     <section id="punchcard"></section>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako_inflate.min.js" integrity="sha512-mlnC6JeOvg9V4vBpWMxGKscsCdScB6yvGVCeFF2plnQMRmwH69s9F8SHPbC0oirqfePmRBhqx2s3Bx7WIvHfWg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
