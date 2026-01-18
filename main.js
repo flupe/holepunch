@@ -181,14 +181,17 @@ function updatePunchCard() {
 
   punchcard.innerHTML = ""
 
-  let hole  = document.createElement('span')
-  let info  = hole.cloneNode()
-  let frag  = document.createDocumentFragment()
-  let punch = null
+  let offset = parseInt(card_offset.value)
+  let hole   = document.createElement('span')
+  let info   = hole.cloneNode()
+  let frag   = document.createDocumentFragment()
+  let punch  = null
+
+  let hheight = double_jacquard.checked ? 2 * height : height
 
   function annot(str, row) {
     let annot = info.cloneNode()
-    annot.style.gridRow = row
+    annot.style.gridRow = 1 + (row + hheight - 1 - offset) % hheight
     annot.innerText = str
     frag.appendChild(annot)
   }
@@ -197,14 +200,14 @@ function updatePunchCard() {
   info.classList.add('info')
 
   if (double_jacquard.checked) {
-    punch = new Array(width * (height * 2 - 1)).fill(false)
+    punch = new Array(width * (height * 2)).fill(false)
 
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         punch[x + width * (2 * y + 1 - (y % 2))] = data[x + y * width] != 1
-        if (y + 1 < height) {
+        // if (y + 1 < height) {
           punch[x + width * (2 * y + (y % 2))    ] = data[x + y * width] == 1
-        }
+        // }
       }
 
       annot(y % 2 ? 'A' : 'B', y * 2 + 1)
@@ -235,3 +238,4 @@ function updatePunchCard() {
 onFileInputChange()
 
 on(double_jacquard, "change", updatePunchCard)
+on(card_offset, "change", updatePunchCard)
