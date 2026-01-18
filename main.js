@@ -144,12 +144,11 @@ on(filepick, "change", onFileInputChange)
 async function onFileInputChange() {
   if (filepick.files.length != 1) return
   await processFile(filepick.files[0])
+  updateStats()
   updatePunchCard()
 }
 
-function updatePunchCard() {
-  // show file info
-
+function updateStats() {
   // update file stats
   fileinfo.style.display    = 'inherit'
   fileinfo_dims.innerText   = `${width}x${height}`
@@ -165,17 +164,34 @@ function updatePunchCard() {
   let img = new Uint32Array(buf.data.buffer)
   data.forEach((x, i) => img[i] = hex(palette[data[i]]))
   ctx.putImageData(buf, 0, 0)
+}
+
+function updatePunchCard() {
+  if (data === null) return
 
   punchcard.innerHTML = ""
 
-  let punch = new Array(width * height * 2).fill(false)
   let hole  = document.createElement('span')
   let frag  = document.createDocumentFragment()
+  let punch = null
 
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      punch[x + width * (2 * y + (y % 2))    ] = data[x + y * width] == 1
-      punch[x + width * (2 * y + 1 - (y % 2))] = data[x + y * width] != 1
+  if (double_jacquard.checked) {
+    punch = new Array(width * height * 2).fill(false)
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        punch[x + width * (2 * y + (y % 2))    ] = data[x + y * width] == 1
+        punch[x + width * (2 * y + 1 - (y % 2))] = data[x + y * width] != 1
+      }
+    }
+  }
+  else {
+    punch = new Array(width * height).fill(false)
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        punch[x + width * y] = data[x + y * width] == 1
+      }
     }
   }
 
@@ -189,3 +205,5 @@ function updatePunchCard() {
 }
 
 onFileInputChange()
+
+on(double_jacquard, "change", updatePunchCard)
