@@ -155,6 +155,16 @@ function updateStats() {
   fileinfo_pal.innerText    = `${palette.length} yarn(s)`
   fileinfo_ratio.innerText  = `${pwidth}:${pheight}`
 
+  fileinfo_yarns.innerHTML = ''
+  palette.forEach(({r, g, b}) => {
+    let item = document.createElement('li')
+    let swatch = document.createElement('span')
+    swatch.style.background = `rgb(${r}, ${g}, ${b})`
+    item.appendChild(swatch)
+    fileinfo_yarns.appendChild(item)
+  })
+
+
   // draw the canvas preview
   canvas.width  = width
   canvas.height = height
@@ -172,18 +182,34 @@ function updatePunchCard() {
   punchcard.innerHTML = ""
 
   let hole  = document.createElement('span')
+  let info  = hole.cloneNode()
   let frag  = document.createDocumentFragment()
   let punch = null
 
+  function annot(str, row) {
+    let annot = info.cloneNode()
+    annot.style.gridRow = row
+    annot.innerText = str
+    frag.appendChild(annot)
+  }
+
+  hole.classList.add('hole')
+  info.classList.add('info')
+
   if (double_jacquard.checked) {
-    punch = new Array(width * height * 2).fill(false)
+    punch = new Array(width * (height * 2 - 1)).fill(false)
 
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
-        punch[x + width * (2 * y + (y % 2))    ] = data[x + y * width] == 1
         punch[x + width * (2 * y + 1 - (y % 2))] = data[x + y * width] != 1
+        if (y + 1 < height) {
+          punch[x + width * (2 * y + (y % 2))    ] = data[x + y * width] == 1
+        }
       }
+
+      annot(y % 2 ? 'A' : 'B', y * 2 + 1)
     }
+
   }
   else {
     punch = new Array(width * height).fill(false)
@@ -193,6 +219,8 @@ function updatePunchCard() {
         punch[x + width * y] = data[x + y * width] == 1
       }
     }
+
+    annot('A/B', height)
   }
 
   punch.forEach(isPunched => {

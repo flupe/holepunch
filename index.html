@@ -78,23 +78,44 @@ main {
 
 #fileinfo { display: none }
 
+#fileinfo_yarns {
+  list-style-type: upper-alpha;
+
+  li span {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 1px solid #000;
+  }
+}
+
 #punchcard {
   display: grid;
   max-width: 740px;
   height: auto;
   background: #fff;
-  grid-template-columns: repeat(24, 1fr);
+  grid-template-columns: auto repeat(24, 1fr);
   border: 2px solid #aaa;
   border-radius: 8px;
   padding: 40px 30px;
   gap: 2px;
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1), 0 2px 2px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 5px 10px rgba(0, 0, 0, 0.1),
+    0 2px  2px rgba(0, 0, 0, 0.1);
 
-  span {
+  span.info {
+    grid-column: 1;
+    padding-right: 10px;
+    letter-spacing: 3px;
+    font-size: 18px;
+  }
+  :nth-child(24n + 1 of span.hole) { grid-column-start: 2 }
+
+  span.hole {
     padding: 0;
+    display: flex;
     aspect-ratio: 1 / 1;
     border-radius: 50%;
-    display: flex;
     justify-content: center;
     align-items: center;
 
@@ -102,13 +123,14 @@ main {
       background: #000;
     }
 
+
     &:not(.punched) {
       border: 1px solid #aaa;
       &::after {
         content: '';
         display: block;
         background: #aaa;
-        width: 4px;
+        width: 20%;
         aspect-ratio: 1 / 1;
         border-radius: 50%;
       }
@@ -158,9 +180,10 @@ main {
       <section id="fileinfo">
         <p>
           Dimensions:   <span id="fileinfo_dims"></span><br>
-          Palette size: <span id="fileinfo_pal"></span><br>
-          Pixel ratio:  <span id="fileinfo_ratio"></span>
+          Pixel ratio:  <span id="fileinfo_ratio"></span><br>
+          Palette size: <span id="fileinfo_pal"></span>
         </p>
+        <ol id="fileinfo_yarns"></ol>
         <hr>
         <input checked id="double_jacquard" type="checkbox">
         <label for="double_jacquard">Double Jacquard</label>
