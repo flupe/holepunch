@@ -16,7 +16,8 @@ body {
 
   display: grid;
   gap: 30px;
-  grid-template-columns: 1fr 2fr 1.5fr;
+  grid-template: "controls card meta" / 1fr 2fr 1.5fr;
+
 }
 
 p { margin: 0 0 1em }
@@ -35,10 +36,13 @@ dd + dt { margin-top: 1em }
 #meta {padding-top: 20px}
 main {
   padding-top: 20px;
-  position: sticky;
-  top: 0;
-  left: 0;
-  align-self: start;
+
+  > section {
+    position: sticky;
+    top: 1rem;
+    left: 0;
+    right: 0;
+  }
 
   header {
     h1 {
@@ -108,6 +112,7 @@ main {
   height: auto;
   background: #fff;
   grid-template-columns: auto repeat(24, 1fr);
+  grid-auto-rows: min-content;
   border: 2px solid #aaa;
   border-radius: 8px;
   padding: 40px 30px;
@@ -167,10 +172,22 @@ main {
 }
 
 #meta {
+  grid-area: meta;
   h2 {
     font-size: inherit;
   }
 }
+
+@media (max-width: 1440px) {
+  body {
+    grid-template:
+      "controls card"
+      "meta meta" / 1fr 2fr;
+  }
+
+  #meta { padding-top: 0 }
+}
+
     </style>
   </head>
   <body>
@@ -191,36 +208,38 @@ main {
           </span>
         </h1>
         <p>
-        <em>holepunch</em> is a small utility for generating knitting machine punchcards from designs made using <a href="https://www.aseprite.org/">Aseprite</a>.
-        It is especially useful for generating <em>double jacquard</em> patterns.</p>
+        <em>holepunch</em> is a small utility for generating knitting machine punchcards from custom designs.
+        It is especially useful for <em>double jacquard</em> patterns.</p>
       </header>
-      <hr>
-      <label for=filepick>Load an Aseprite file:</label><br>
-      <input type="file" id="filepick" accept=".aseprite">
-      <hr>
-      <section id="fileinfo">
-        <p>
-          Dimensions:   <span id="fileinfo_dims"></span><br>
-          Pixel ratio:  <span id="fileinfo_ratio"></span><br>
-          Palette size: <span id="fileinfo_pal"></span>
-        </p>
-        <ol id="fileinfo_yarns"></ol>
+      <section>
         <hr>
-        <form>
-          <input checked id="double_jacquard" type="checkbox">
-          <label for="double_jacquard">Double Jacquard</label>
-          <br>
-          <label for="card_offset">Labeling offset:</label>
-          <input checked id="card_offset" type="number" value="4" min="0">
-        </form>
+        <label for=filepick>Load an image or <a href="https://www.aseprite.org/">.aseprite</a> file:</label><br>
+        <input type="file" id="filepick" accept=".aseprite,image/*">
         <hr>
-        <canvas id="canvas"></canvas>
+        <section id="fileinfo">
+          <p>
+            Dimensions:   <span id="fileinfo_dims"></span><br>
+            Pixel ratio:  <span id="fileinfo_ratio"></span><br>
+            Palette size: <span id="fileinfo_pal"></span>
+          </p>
+          <ol id="fileinfo_yarns"></ol>
+          <hr>
+          <form>
+            <input checked id="double_jacquard" type="checkbox">
+            <label for="double_jacquard">Double Jacquard</label>
+            <br>
+            <label for="card_offset">Labeling offset:</label>
+            <input checked id="card_offset" type="number" value="4" min="0">
+          </form>
+          <hr>
+          <canvas id="canvas"></canvas>
+        </section>
       </section>
     </main>
     <section id="punchcard"></section>
     <section id="meta">
       <h2>How to use the tool?</h2>
-      <p>Import an Aseprite file and play around with the parameters of the tool.
+      <p>Import an image or Aseprite file and play around with the parameters of the tool.
          Beware, Aseprite loading is still experimental, and there are many limitations.
          This has only been tested on files with a <em>single layer</em>, using <em>indexed coloring</em>.</p>
 
@@ -241,6 +260,9 @@ main {
          Hence the punchcard transform: we alternate between the two colors repeatedly.
          For every row, we first knit some stitches using one color, and then knit every other stitches using the other yarn.
         </p>
+      <hr>
+      <h2>Contributing</h2>
+      <p>This tool was made during the weekend. If you want to report a bug, or help improve the tool, feel free to head over to <a href="https://github.com/flupe/holepunch">Github</a>.</p>
     </section>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako_inflate.min.js" integrity="sha512-mlnC6JeOvg9V4vBpWMxGKscsCdScB6yvGVCeFF2plnQMRmwH69s9F8SHPbC0oirqfePmRBhqx2s3Bx7WIvHfWg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="main.js"></script>

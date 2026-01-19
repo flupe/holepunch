@@ -1,7 +1,13 @@
-const on = (t, e, f) => t.addEventListener(e, f, false)
-const hex = (c) => 0xff000000 | c.b << 16 | c.g << 8 | c.r
+const on  = (t, e, f) => t.addEventListener(e, f, false)
+const hex = c => 0xff000000 | c.b << 16 | c.g << 8 | c.r
+const Img = src => new Promise((resolve, reject) => {
+  const img = new Image()
+  on(img, 'load',  _ => resolve(img))
+  on(img, 'abort', _ => reject(img))
+  img.src = src
+})
 
-// file info (to be update when loading)
+// file info (to be updated when loading)
 let palette = []
 let data    = null
 let pwidth  = 0
@@ -10,8 +16,41 @@ let width   = 0
 let height  = 0
 let ratio   = 1
 
-async function processFile(file) {
-  // exit if less/more than 1 file is selected
+async function processImage(file) {
+  const img = await Img(URL.createObjectURL(file))
+  const cvs = document.createElement('canvas')
+
+  width  = cvs.width  = img.width
+  height = cvs.height = img.height
+  pwidth = pheight = ratio = 1
+
+  const ctx = cvs.getContext('2d')
+
+  ctx.drawImage(img, 0, 0)
+
+  let idata  = ctx.getImageData(0, 0, width, height)
+  let pixels = new Uint32Array(idata.data.buffer)
+
+  data    = new Uint8Array(width * height)
+  palette = []
+
+  // mapping from hex code to palette index
+  const yarns = new Map
+
+  pixels.forEach((v, i) => {
+    if (yarns.has(v)) data[i] = yarns.get(v)
+    else {
+      yarns.set(v, data[i] = palette.length)
+      palette.push({
+        r: v       & 0xff,
+        g: v >> 8  & 0xff,
+        b: v >> 16 & 0xff,
+      })
+    }
+  })
+}
+
+async function processAseprite(file) {
   const buffer = await file.arrayBuffer()
   const view   = new DataView(buffer)
 
@@ -139,17 +178,8 @@ async function processFile(file) {
   }
 }
 
-on(filepick, "change", onFileInputChange)
-
-async function onFileInputChange() {
-  if (filepick.files.length != 1) return
-  await processFile(filepick.files[0])
-  updateStats()
-  updatePunchCard()
-}
-
 function updateStats() {
-  // update file stats
+  // make pane visible
   fileinfo.style.display    = 'inherit'
   fileinfo_dims.innerText   = `${width}x${height}`
   fileinfo_pal.innerText    = `${palette.length} yarn(s)`
@@ -163,7 +193,6 @@ function updateStats() {
     item.appendChild(swatch)
     fileinfo_yarns.appendChild(item)
   })
-
 
   // draw the canvas preview
   canvas.width  = width
@@ -223,7 +252,7 @@ function updatePunchCard() {
       }
     }
 
-    annot('A/B', height)
+    annot('AB', height)
   }
 
   punch.forEach(isPunched => {
@@ -235,7 +264,22 @@ function updatePunchCard() {
   punchcard.appendChild(frag)
 }
 
-onFileInputChange()
+async function onFileInputChange() {
+  // no file/too many files: abort
+  if (filepick.files.length != 1) return
 
+  let file = filepick.files[0]
+
+  await (file.name.endsWith('.aseprite')
+    ? processAseprite(file)
+    : processImage(file))
+
+  updateStats()
+  updatePunchCard()
+}
+
+on(filepick,        "change", onFileInputChange)
 on(double_jacquard, "change", updatePunchCard)
-on(card_offset, "change", updatePunchCard)
+on(card_offset,     "change", updatePunchCard)
+
+onFileInputChange()
